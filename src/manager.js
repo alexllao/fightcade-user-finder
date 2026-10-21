@@ -196,14 +196,24 @@
             ? (secondsPlayed / 3600).toFixed(1) + ' h'
             : 'Sin dato';
           found.push(
-            '#' + rankingPosition +
+            '#' +
+              rankingPosition +
               (total !== null ? ' de ' + total : '') +
-              ' · ' + user.name +
-              ' · País: ' + country + ' (' + countryCode + ')' +
-              ' · Rango: ' + rank +
-              ' · Partidas: ' + matches +
-              ' · Tiempo jugado: ' + hoursPlayed +
-              ' · Página: ' + (Math.floor(offset / limit) + 1),
+              ' · ' +
+              user.name +
+              ' · País: ' +
+              country +
+              ' (' +
+              countryCode +
+              ')' +
+              ' · Rango: ' +
+              rank +
+              ' · Partidas: ' +
+              matches +
+              ' · Tiempo jugado: ' +
+              hoursPlayed +
+              ' · Página: ' +
+              (Math.floor(offset / limit) + 1),
           );
           pending.delete(key);
         }
