@@ -1,0 +1,25 @@
+{
+  "name": "fightcade-user-finder",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.18.3",
+  "author": "Àlex Llaó",
+  "scripts": {
+    "dev": "node scripts/build.mjs --watch",
+    "build": "node scripts/build.mjs",
+    "check": "node --check src/background.js && node --check src/manager.js && node --check scripts/build.mjs && node --check scripts/package.mjs",
+    "package": "pnpm run build && node scripts/package.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint src scripts",
+    "validate": "pnpm run check && pnpm run lint && pnpm run format:check && pnpm run build"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "fflate": "^0.8.2",
+    "eslint": "^9.39.0",
+    "globals": "^16.0.0",
+    "prettier": "^3.6.2"
+  }
+}
