@@ -68,6 +68,23 @@
   let running = false;
   let stopped = false;
   const limit = 15;
+  const pageDelayMs = 5000;
+  const maxRateLimitRetries = 2;
+
+  async function waitSeconds(seconds, reason) {
+    for (let remaining = seconds; remaining > 0 && !stopped; remaining--) {
+      el('status').textContent = reason + ' ' + remaining + ' s.';
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+
+  function retryAfterSeconds(value) {
+    if (!value) return 30;
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)) return Math.max(1, Math.ceil(numeric));
+    const date = Date.parse(value);
+    return Number.isFinite(date) ? Math.max(1, Math.ceil((date - Date.now()) / 1000)) : 30;
+  }
 
   function section(title, items) {
     if (!items.length) return;
@@ -126,23 +143,31 @@
           '. Pendientes: ' +
           pending.size +
           '.';
-        const response = await fetch('/api/', {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          body: JSON.stringify({
-            req: 'searchrankings',
-            gameid: el('game').value,
-            limit,
-            offset,
-            recent: true,
-            byElo: true,
-          }),
-        });
-        if (response.status === 429) {
-          const retryAfter = response.headers.get('Retry-After');
-          throw new Error('Fightcade ha limitado las peticiones (HTTP 429). Búsqueda detenida para evitar más bloqueos.' + (retryAfter ? ' Reintenta después de ' + retryAfter + '.' : ' Espera unos minutos antes de reintentar.'));
+        let response;
+        let retries = 0;
+        while (!stopped) {
+          response = await fetch('/api/', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({
+              req: 'searchrankings',
+              gameid: el('game').value,
+              limit,
+              offset,
+              recent: true,
+              byElo: true,
+            }),
+          });
+          if (response.status !== 429) break;
+          if (retries >= maxRateLimitRetries) {
+            throw new Error('Fightcade sigue limitando las peticiones (HTTP 429) después de ' + retries + ' reintentos.');
+          }
+          retries++;
+          const seconds = retryAfterSeconds(response.headers.get('Retry-After'));
+          await waitSeconds(seconds + 1, 'HTTP 429. Esperando antes de reintentar esta página:');
         }
+        if (stopped) break;
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         if (data.res !== 'OK' || !Array.isArray(data.results?.results))
@@ -176,8 +201,7 @@
           completed = true;
           break;
         }
-        el('status').textContent = 'Esperando antes de consultar la siguiente página para respetar los límites de Fightcade...';
-        await new Promise((resolve) => setTimeout(resolve, 2500));
+        await waitSeconds(pageDelayMs / 1000, 'Pausa antes de la siguiente página:');
       }
       if (!pending.size) completed = true;
     } catch (error) {
