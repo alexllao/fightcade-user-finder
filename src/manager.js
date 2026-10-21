@@ -51,7 +51,15 @@
   el('close').onclick = () => root.remove();
   shadow.querySelector('.backdrop').onclick = () => root.remove();
 
-  const parse = () => [...new Map(el('users').value.split(',').map((name) => name.trim()).filter(Boolean).map((name) => [name.toLocaleLowerCase(), name])).values()];
+  const parse = () => [
+    ...new Map(
+      el('users')
+        .value.split(',')
+        .map((name) => name.trim())
+        .filter(Boolean)
+        .map((name) => [name.toLocaleLowerCase(), name]),
+    ).values(),
+  ];
   el('users').addEventListener('input', () => {
     const count = parse().length;
     el('count').textContent = count + (count === 1 ? ' usuario' : ' usuarios');
@@ -109,18 +117,35 @@
 
     try {
       while (pending.size && !stopped) {
-        el('status').textContent = 'Consultando resultados ' + (offset + 1) + '–' + (offset + limit) + (total === null ? '' : ' de ' + total) + '. Pendientes: ' + pending.size + '.';
+        el('status').textContent =
+          'Consultando resultados ' +
+          (offset + 1) +
+          '–' +
+          (offset + limit) +
+          (total === null ? '' : ' de ' + total) +
+          '. Pendientes: ' +
+          pending.size +
+          '.';
         const response = await fetch('/api/', {
           method: 'POST',
           credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          body: JSON.stringify({ req: 'searchrankings', gameid: el('game').value, limit, offset, recent: true, byElo: true }),
+          body: JSON.stringify({
+            req: 'searchrankings',
+            gameid: el('game').value,
+            limit,
+            offset,
+            recent: true,
+            byElo: true,
+          }),
         });
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
-        if (data.res !== 'OK' || !Array.isArray(data.results?.results)) throw new Error('Respuesta inesperada de Fightcade');
+        if (data.res !== 'OK' || !Array.isArray(data.results?.results))
+          throw new Error('Respuesta inesperada de Fightcade');
         const batch = data.results.results;
-        if (Number.isInteger(data.results.count) && data.results.count >= 0) total = data.results.count;
+        if (Number.isInteger(data.results.count) && data.results.count >= 0)
+          total = data.results.count;
 
         for (let index = 0; index < batch.length; index++) {
           const user = batch[index];
@@ -129,7 +154,16 @@
           if (!pending.has(key)) continue;
           const country = user.country?.full_name || 'País desconocido';
           const stats = user.gameinfo?.[el('game').value];
-          found.push(user.name + ' · ' + country + ' · posición ' + (offset + index + 1) + ' · página ' + (Math.floor(offset / limit) + 1) + (stats?.num_matches != null ? ' · partidas ' + stats.num_matches : ''));
+          found.push(
+            user.name +
+              ' · ' +
+              country +
+              ' · posición ' +
+              (offset + index + 1) +
+              ' · página ' +
+              (Math.floor(offset / limit) + 1) +
+              (stats?.num_matches != null ? ' · partidas ' + stats.num_matches : ''),
+          );
           pending.delete(key);
         }
 
@@ -148,12 +182,25 @@
       el('stop').disabled = true;
       el('game').disabled = false;
       section('Encontrados', found);
-      section(completed && !stopped && !errorMessage ? 'No encontrados' : 'Pendientes sin verificar', [...pending.values()]);
+      section(
+        completed && !stopped && !errorMessage ? 'No encontrados' : 'Pendientes sin verificar',
+        [...pending.values()],
+      );
       el('status').textContent = errorMessage
         ? 'Error: ' + errorMessage + '. Los pendientes no están verificados.'
         : stopped
-          ? 'Búsqueda detenida. ' + found.length + ' encontrados; pendientes sin verificar: ' + pending.size + '.'
-          : 'Búsqueda terminada. ' + found.length + ' encontrados de ' + names.length + '; ' + offset + ' resultados revisados.';
+          ? 'Búsqueda detenida. ' +
+            found.length +
+            ' encontrados; pendientes sin verificar: ' +
+            pending.size +
+            '.'
+          : 'Búsqueda terminada. ' +
+            found.length +
+            ' encontrados de ' +
+            names.length +
+            '; ' +
+            offset +
+            ' resultados revisados.';
     }
   };
 })();

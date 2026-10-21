@@ -4,10 +4,7 @@
   "short_name": "User Finder",
   "version": "0.2.0",
   "description": "Search and locate Fightcade users. Developed by Àlex Llaó.",
-  "permissions": [
-    "activeTab",
-    "scripting"
-  ],
+  "permissions": ["activeTab", "scripting"],
   "action": {
     "default_title": "Fightcade User Finder"
   },
