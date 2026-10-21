@@ -139,6 +139,10 @@
             byElo: true,
           }),
         });
+        if (response.status === 429) {
+          const retryAfter = response.headers.get('Retry-After');
+          throw new Error('Fightcade ha limitado las peticiones (HTTP 429). Búsqueda detenida para evitar más bloqueos.' + (retryAfter ? ' Reintenta después de ' + retryAfter + '.' : ' Espera unos minutos antes de reintentar.'));
+        }
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         if (data.res !== 'OK' || !Array.isArray(data.results?.results))
@@ -172,6 +176,8 @@
           completed = true;
           break;
         }
+        el('status').textContent = 'Esperando antes de consultar la siguiente página para respetar los límites de Fightcade...';
+        await new Promise((resolve) => setTimeout(resolve, 2500));
       }
       if (!pending.size) completed = true;
     } catch (error) {
