@@ -121,6 +121,8 @@
 
     const pending = new Map(names.map((name) => [name.toLocaleLowerCase(), name]));
     const found = [];
+    let liveGroup = null;
+    let liveHeading = null;
     let offset = 0;
     let total = null;
     let completed = false;
@@ -216,6 +218,18 @@
               (Math.floor(offset / limit) + 1),
           );
           pending.delete(key);
+          if (!liveGroup) {
+            liveGroup = document.createElement('section');
+            liveGroup.className = 'group';
+            liveHeading = document.createElement('h3');
+            liveGroup.append(liveHeading);
+            el('results').append(liveGroup);
+          }
+          liveHeading.textContent = 'Encontrados (' + found.length + ')';
+          const line = document.createElement('div');
+          line.className = 'item';
+          line.textContent = found[found.length - 1];
+          liveGroup.append(line);
         }
 
         offset += batch.length;
@@ -233,7 +247,6 @@
       el('search').disabled = false;
       el('stop').disabled = true;
       el('game').disabled = false;
-      section('Encontrados', found);
       section(
         completed && !stopped && !errorMessage ? 'No encontrados' : 'Pendientes sin verificar',
         [...pending.values()],
