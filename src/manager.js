@@ -161,7 +161,11 @@
           });
           if (response.status !== 429) break;
           if (retries >= maxRateLimitRetries) {
-            throw new Error('Fightcade sigue limitando las peticiones (HTTP 429) después de ' + retries + ' reintentos.');
+            throw new Error(
+              'Fightcade sigue limitando las peticiones (HTTP 429) después de ' +
+                retries +
+                ' reintentos.',
+            );
           }
           retries++;
           const seconds = retryAfterSeconds(response.headers.get('Retry-After'));
