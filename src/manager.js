@@ -186,16 +186,24 @@
           const key = user.name.toLocaleLowerCase();
           if (!pending.has(key)) continue;
           const country = user.country?.full_name || 'País desconocido';
+          const countryCode = user.country?.iso_code || '—';
           const stats = user.gameinfo?.[el('game').value];
+          const rankingPosition = offset + index + 1;
+          const rank = stats?.rank ?? 'Sin dato';
+          const matches = stats?.num_matches ?? 'Sin dato';
+          const secondsPlayed = stats?.time_played;
+          const hoursPlayed = Number.isFinite(secondsPlayed)
+            ? (secondsPlayed / 3600).toFixed(1) + ' h'
+            : 'Sin dato';
           found.push(
-            user.name +
-              ' · ' +
-              country +
-              ' · posición ' +
-              (offset + index + 1) +
-              ' · página ' +
-              (Math.floor(offset / limit) + 1) +
-              (stats?.num_matches != null ? ' · partidas ' + stats.num_matches : ''),
+            '#' + rankingPosition +
+              (total !== null ? ' de ' + total : '') +
+              ' · ' + user.name +
+              ' · País: ' + country + ' (' + countryCode + ')' +
+              ' · Rango: ' + rank +
+              ' · Partidas: ' + matches +
+              ' · Tiempo jugado: ' + hoursPlayed +
+              ' · Página: ' + (Math.floor(offset / limit) + 1),
           );
           pending.delete(key);
         }
